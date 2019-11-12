@@ -14,8 +14,10 @@ class Vector:
     def __sub__(self, other):
         return Vector(self.x - other.x, self.y - other.y)
 
-    def __mul__(self, k):
-        return Vector(self.x * k, self.y * k)
+    def __mul__(self, other):
+        if type(other) != Vector:
+            return Vector(self.x * other, self.y * other)
+        return self.x * other.x + self.y * other.y
 
     def __len__(self):
         return sqrt(self.x * self.x + self.y * self.y)
@@ -97,13 +99,12 @@ class Joint(Line):
             pnt.append((vec1+vec2)*0.5)
             pnt.append(vec2)
             pnt.append((vec2+vec3)*0.5)
-
             result.extend(self.get_points(pnt, count))
         return result
 
 
 class Game:
-    def __init__(self, caption, width, height):
+    def __init__(self, caption, width, height, steps):
         self.screen_size = (width, height)
         self.width = width
         self.height = height
@@ -111,13 +112,14 @@ class Game:
         self.game_display = pygame.display.set_mode(self.screen_size)
         pygame.display.set_caption(caption)
 
-        self.steps = 0
+        self.steps = steps
         self.working = True
         self.points = []
         self.speeds = []
         self.show_help = False
         self.pause = False
         self.speed = 20
+        self.num_points = 0
 
         self.color_param = 0
         self.color = pygame.Color(0)
@@ -133,8 +135,12 @@ class Game:
         data.append(["P", "Воспроизвести / Пауза"])
         data.append(["9", "Добавить точку"])
         data.append(["0", "Удалить точку"])
+        data.append(["1", "Замедлить"])
+        data.append(["2", "Ускорить"])
+        data.append(["3", "Понизить гладкость"])
+        data.append(["4", "Повысить гладкость"])
         data.append(["", ""])
-        data.append([str(self.steps), "текущих точек"])
+        data.append([str(self.num_points), "текущих точек"])
 
         pygame.draw.lines(self.game_display, (255, 50, 50, 255), True, [
             (0, 0), (800, 0), (800, 600), (0, 600)], 5)
@@ -157,11 +163,11 @@ class Game:
                         self.speeds = []
                     if event.key == pygame.K_p:
                         self.pause = not self.pause
-                    if event.key == pygame.K_KP_PLUS:
+                    if event.key == pygame.K_4:
                         self.steps += 1
                     if event.key == pygame.K_F1:
                         self.show_help = not self.show_help
-                    if event.key == pygame.K_KP_MINUS:
+                    if event.key == pygame.K_3:
                         self.steps -= 1 if self.steps > 1 else 0
                     if event.key == pygame.K_2:
                         self.speed *= 1.3
@@ -174,16 +180,16 @@ class Game:
                     if event.key == pygame.K_0:
                         self.points.pop(0)
                         self.speeds.pop(0)
-                        self.steps -= 1
+                        self.num_points -= 1
                     if event.key == pygame.K_9:
                         self.points.append(Vector(self.width//2, self.height//2))
                         self.speeds.append(Vector(random() * self.speed, random() * self.speed))
-                        self.steps += 1
+                        self.num_points += 1
 
                 if event.type == pygame.MOUSEBUTTONUP:
                     self.points.append(Vector(event.pos[0], event.pos[1]))
                     self.speeds.append(Vector(random() * self.speed, random() * self.speed))
-                    self.steps += 1
+                    self.num_points += 1
 
             self.game_display.fill((0, 0, 0))
             self.color_param = (self.color_param + 1) % 360
@@ -206,7 +212,7 @@ class Game:
 
 
 def main():
-    game = Game('Screen saver', 1280, 720)
+    game = Game('Screen saver', 1280, 720, 20)
     game.run()
 
 
